@@ -13,7 +13,7 @@ internal abstract class Program {
 		// try {
 			configuration = settingReader.Read();
 		// } catch (Exception e) {
-			Console.WriteLine("ERROR:");
+			// Console.WriteLine("ERROR:");
 			// Console.WriteLine(e.Message);
 			// return;
 		// }
