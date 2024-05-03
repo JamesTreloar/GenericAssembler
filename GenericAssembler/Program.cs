@@ -9,25 +9,17 @@ internal abstract class Program {
 			return;
 		}
 		SettingReader settingReader = new(args[0]);
-		Configuration configuration;
-		// try {
-			configuration = settingReader.Read();
-		// } catch (Exception e) {
-			Console.WriteLine("ERROR:");
-			// Console.WriteLine(e.Message);
-			// return;
-		// }
+		Configuration? configuration = settingReader.Read();
+		if (configuration == null) {
+			return;
+		}
 
 		string[] input = File.ReadAllLines(args[1]);
 		ProcessFile processFile = new(configuration);
-		List<string> result;
-		// try {
-			result = processFile.Run(input);
-		// } catch (Exception e) {
-		// 	Console.WriteLine("ERROR:");
-		// 	Console.WriteLine(e.Message);
-		// 	return;
-		// }
+		List<string>? result = processFile.Run(input);
+		if (result == null) {
+			return;
+		}
 
 		Console.WriteLine("Binary representation: ");
 		foreach (string s in result) {

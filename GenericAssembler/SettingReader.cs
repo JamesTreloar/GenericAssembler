@@ -4,19 +4,31 @@ using System.Text.Json.Nodes;
 namespace GenericAssembler; 
 
 public class SettingReader(string fileName) {
-	public Configuration Read() {
+	public Configuration? Read() {
 		string jsonString = File.ReadAllText(fileName);
-		JsonNode node = JsonNode.Parse(jsonString)!;
+		JsonNode node;
+		Configuration? config;
+		try {
+			node = JsonNode.Parse(jsonString)!;
 
-		Configuration? config = JsonSerializer.Deserialize<Configuration>(jsonString);
-		
-		if (node == null || config == null) {
-			throw new JsonException("Invalid json provided.");
+			config = JsonSerializer.Deserialize<Configuration>(jsonString);
+		} catch (Exception e) {
+			Console.WriteLine("ERROR");
+			Console.WriteLine("Invalid json provided");
+			return null;
 		}
+
+		if (config == null) {
+			Console.WriteLine("ERROR");
+			Console.WriteLine("Invalid json provided");
+			return null;
+		} 
 
 		JsonArray instructions = node!["Instructions"]!.AsArray();
 		if (instructions.Count < 1) {
-			throw new("No instructions were provided in the json input.");
+			Console.WriteLine("ERROR");
+			Console.WriteLine("No instructions were provided in the json input.");
+			return null;
 		}
 		
 		foreach (JsonNode jsonNode in instructions) {
@@ -62,8 +74,10 @@ public class SettingReader(string fileName) {
 					config.Instructions.Add(add);
 					break;
 				default:
-					throw new($"Invalid instruction format ({jsonNode!["Format"]!}) " +
+					Console.WriteLine("ERROR");
+					Console.WriteLine($"Invalid instruction format ({jsonNode!["Format"]!}) " +
 					          $"encountered on the {jsonNode.GetElementIndex()}th instruction definition.");
+					return null;
 			}
 		}
 		

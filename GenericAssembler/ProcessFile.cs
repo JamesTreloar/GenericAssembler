@@ -1,10 +1,13 @@
 namespace GenericAssembler; 
 
-public class ProcessFile(Configuration configuration) {
-	public List<string> Run(string[] lines) {
-		List<string> result = new();
+public class ProcessFile(Configuration? configuration) {
+	public List<string>? Run(string[] lines) {
+		List<string>? result = new();
 
+		int linenum = 0;
+		bool failed = false;
 		foreach (string line in lines) {
+			linenum++;
 			string t = line.Trim();
 			if (t[0] == '#') {
 				continue;
@@ -15,7 +18,9 @@ public class ProcessFile(Configuration configuration) {
 			List<Instruction> definitions = new(configuration.Instructions);
 			int index = definitions.FindIndex(x => x.Nemonic == temp[0]);
 			if (index == -1) {
-				throw new($"Invalid instruction {temp[0]} used in assembly file");
+				Console.WriteLine("ERROR");
+				Console.WriteLine($"Invalid instruction {temp[0]} used in assembly file on line {linenum}");
+				return null;
 			}
 
 			Instruction instruction = definitions[index];
@@ -28,36 +33,83 @@ public class ProcessFile(Configuration configuration) {
 			calculatedInstruction += data;
 			switch (instruction.Format) {
 				case InstructionFormat.R:
-					calculatedInstruction += ProcessRType(temp[2], temp[3], temp[1], instruction.Shamt, instruction.Funct);
+					if (!ValidateRegisters(temp[1], temp[2], temp[3])) {
+						failed = true;
+					} else {
+						calculatedInstruction +=
+							ProcessRType(temp[2], temp[3], temp[1], instruction.Shamt, instruction.Funct);
+					}
 					break;
 				case InstructionFormat.RShift:
-					calculatedInstruction += ProcessRType("$0", temp[1], temp[2], instruction.Shamt, instruction.Funct);
+					if (!ValidateRegisters(temp[1], temp[2])) {
+						failed = true;
+					} else {
+						calculatedInstruction +=
+							ProcessRType("$0", temp[1], temp[2], instruction.Shamt, instruction.Funct);
+					}
 					break;
 				case InstructionFormat.RSingle:
-					calculatedInstruction += ProcessRType(temp[1], "$0", "$0", instruction.Shamt, instruction.Funct);
+					if (!ValidateRegisters(temp[1])) {
+						failed = true;
+					} else {
+						calculatedInstruction +=
+							ProcessRType(temp[1], "$0", "$0", instruction.Shamt, instruction.Funct);
+					}
 					break;
 				case InstructionFormat.I:
-					calculatedInstruction += ProcessIType(temp[1], temp[2], int.Parse(temp[3]));
+					if (!ValidateRegisters(temp[1], temp[2])) {
+						failed = true;
+					} else {
+						calculatedInstruction += ProcessIType(temp[1], temp[2], int.Parse(temp[3]));
+					}
 					break;
 				case InstructionFormat.IMem:
 					string[] foo = temp[2].Split("(");
-					calculatedInstruction += ProcessIType(temp[1], foo[1][..^1], int.Parse(foo[0]));
+					if (!ValidateRegisters(temp[1], foo[1][..^1])) {
+						failed = true;
+					} else {
+						calculatedInstruction += ProcessIType(temp[1], foo[1][..^1], int.Parse(foo[0]));
+					}
 					break;
 				case InstructionFormat.ISingle:
-					calculatedInstruction += ProcessIType("$0", temp[1], int.Parse(temp[2]));
+					if (!ValidateRegisters(temp[1])) {
+						failed = true;
+					} else {
+						calculatedInstruction += ProcessIType("$0", temp[1], int.Parse(temp[2]));
+					}
 					break;
 				case InstructionFormat.J:
 					string address = Convert.ToString(int.Parse(temp[1]), 2);
 					address = address.PadLeft(configuration.AddressLength, '0');
 					calculatedInstruction += address;
 					break;
-		}
+			}
+
+			if (failed) {
+				Console.WriteLine("ERROR");
+				Console.WriteLine($"Invalid register format on line {linenum}");
+				return null;
+			}
 			result.Add(calculatedInstruction);
 		}
 
 		return result;
 	}
 
+	private bool ValidateRegisters(params string[] registers) {
+		foreach (string r in registers) {
+			if (r[0] != '$') {
+				return false;
+			}
+
+			if (r.Length == 1) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+    
 	private string ProcessRType(string rs, string rt, string rd, int shamt, int funct) {
 		string calculatedInstruction = "";
 		calculatedInstruction += ProcessRegister(rs);
@@ -83,10 +135,6 @@ public class ProcessFile(Configuration configuration) {
 	}
 	
 	private string ProcessRegister(string registerCommand) {
-		if (registerCommand[0] != '$') {
-			throw new("Register references must begin with a $");
-		}
-
 		string reg = Convert.ToString(int.Parse(registerCommand[1..]), 2);
 		reg = reg.PadLeft(configuration.RegisterLength, '0');
 		return reg;
