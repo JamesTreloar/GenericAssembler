@@ -1,13 +1,13 @@
 namespace GenericAssembler; 
 
-public class ProcessFile(Configuration? configuration) {
+public class ProcessFile(Configuration configuration) {
 	public List<string>? Run(string[] lines) {
-		List<string>? result = new();
+		List<string> result = new();
 
-		int linenum = 0;
+		int lineNum = 0;
 		bool failed = false;
 		foreach (string line in lines) {
-			linenum++;
+			lineNum++;
 			string t = line.Trim();
 			if (t[0] == '#') {
 				continue;
@@ -19,7 +19,7 @@ public class ProcessFile(Configuration? configuration) {
 			int index = definitions.FindIndex(x => x.Nemonic == temp[0]);
 			if (index == -1) {
 				Console.WriteLine("ERROR");
-				Console.WriteLine($"Invalid instruction {temp[0]} used in assembly file on line {linenum}");
+				Console.WriteLine($"Invalid instruction {temp[0]} used in assembly file on line {lineNum}");
 				return null;
 			}
 
@@ -87,7 +87,7 @@ public class ProcessFile(Configuration? configuration) {
 
 			if (failed) {
 				Console.WriteLine("ERROR");
-				Console.WriteLine($"Invalid register format on line {linenum}");
+				Console.WriteLine($"Invalid register format on line {lineNum}");
 				return null;
 			}
 			result.Add(calculatedInstruction);
