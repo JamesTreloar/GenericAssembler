@@ -1,11 +1,11 @@
 namespace GenericAssembler; 
 
 public struct Instruction {
-	public string Nemonic { get; }
-	public InstructionFormat Format { get; }
-	public int OpCode { get; }
-	public int Shamt { get; }
-	public int Funct { get; }
+	public readonly string Nemonic;
+	public readonly InstructionFormat Format;
+	public readonly int OpCode;
+	public readonly int Shamt;
+	public readonly int Funct;
 
 
 	public Instruction(string nemonic, InstructionFormat format, int opCode) {

@@ -30,6 +30,34 @@ public class SettingReader(string fileName) {
 			Console.WriteLine("No instructions were provided in the json input.");
 			return null;
 		}
+
+		int instructionLen = config.InstructionLength;
+		int rSum = config.OpCodeLength + config.RegisterLength * 3 + config.FunctLength + config.ShamtLength;
+		if (rSum != instructionLen) {
+			Console.WriteLine("ERROR");
+			Console.WriteLine("Invalid lengths for r-type instructions.");
+			Console.WriteLine("Instruction length needs to be equal to length for opcode, 3 registers, shamt, and funct");
+			Console.WriteLine($"Currently instruction length is {instructionLen} and calculated length is {rSum}");
+			return null;
+		}
+
+		int iSum = config.OpCodeLength + config.RegisterLength * 2 + config.ImmediateLength;
+		if (iSum != config.InstructionLength) {
+			Console.WriteLine("ERROR");
+			Console.WriteLine("Invalid lengths for i-type instructions.");
+			Console.WriteLine("Instruction length needs to be equal to length for opcode, 2 registers, and immediate value");
+			Console.WriteLine($"Currently instruction length is {instructionLen} and calculated length is {iSum}");
+			return null;
+		}
+
+		int jSum = config.OpCodeLength + config.AddressLength;
+		if (jSum != config.InstructionLength) {
+			Console.WriteLine("ERROR");
+			Console.WriteLine("Invalid lengths for j-type instructions.");
+			Console.WriteLine("Instruction length needs to be equal to length for opcode, and address");
+			Console.WriteLine($"Currently instruction length is {instructionLen} and calculated length is {jSum}");
+			return null;
+		}
 		
 		foreach (JsonNode jsonNode in instructions) {
 			Instruction add;
