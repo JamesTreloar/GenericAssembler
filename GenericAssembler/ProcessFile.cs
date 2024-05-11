@@ -57,7 +57,7 @@ public class ProcessFile(Configuration configuration) {
 					}
 					break;
 				case InstructionFormat.I:
-					if (!ValidateRegisters(temp[1], temp[2])) {
+					if (!ValidateRegisters(temp[1], temp[2]) || !ValidateImmediate(int.Parse(temp[3]))) {
 						failed = true;
 					} else {
 						calculatedInstruction += ProcessIType(temp[1], temp[2], int.Parse(temp[3]));
@@ -65,20 +65,24 @@ public class ProcessFile(Configuration configuration) {
 					break;
 				case InstructionFormat.IMem:
 					string[] foo = temp[2].Split("(");
-					if (!ValidateRegisters(temp[1], foo[1][..^1])) {
+					if (!ValidateRegisters(temp[1], foo[1][..^1]) || !ValidateImmediate(int.Parse(foo[0]))) {
 						failed = true;
 					} else {
 						calculatedInstruction += ProcessIType(temp[1], foo[1][..^1], int.Parse(foo[0]));
 					}
 					break;
 				case InstructionFormat.ISingle:
-					if (!ValidateRegisters(temp[1])) {
+					if (!ValidateRegisters(temp[1]) || !ValidateImmediate(int.Parse(temp[2]))) {
 						failed = true;
 					} else {
 						calculatedInstruction += ProcessIType("$0", temp[1], int.Parse(temp[2]));
 					}
 					break;
 				case InstructionFormat.J:
+					if (!ValidateAddress(int.Parse(temp[1]))) {
+						failed = true;
+						break;
+					}
 					string address = Convert.ToString(int.Parse(temp[1]), 2);
 					address = address.PadLeft(configuration.AddressLength, '0');
 					calculatedInstruction += address;
@@ -96,6 +100,15 @@ public class ProcessFile(Configuration configuration) {
 		return result;
 	}
 
+	private bool ValidateImmediate(int val) {
+		return ValidateConstant(val, configuration.ImmediateLength);
+	}
+	private bool ValidateAddress(int val) {
+		return ValidateConstant(val, configuration.AddressLength);
+	}
+	private bool ValidateConstant(int val, int size) {
+		return val < 1 << size && val > -1 * 1 << (size-1);
+	}
 	private bool ValidateRegisters(params string[] registers) {
 		foreach (string r in registers) {
 			if (r[0] != '$') {
