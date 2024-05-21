@@ -3,21 +3,25 @@
 internal abstract class Program {
 
 	public static void Main(string[] args) {
+		ErrorValue ev;
 		if (args.Length != 2) {
-			Console.WriteLine("Error:");
-			Console.WriteLine("USAGE: ./GenericAssembler schema.json input.s");
+			ev = new(ErrorNumbers.InvalidOptions);
+			ev.DisplayError();
 			return;
 		}
 		SettingReader settingReader = new(args[0]);
-		Configuration? configuration = settingReader.Read();
-		if (configuration == null) {
+		
+		(Configuration? configuration, ev) = settingReader.Read();
+		if (!ev.IsOkay() || configuration == null) {
+			ev.DisplayError();
 			return;
 		}
 
 		string[] input = File.ReadAllLines(args[1]);
 		ProcessFile processFile = new(configuration);
-		List<string>? result = processFile.Run(input);
-		if (result == null) {
+		(List<string>? result, ev) = processFile.Run(input);
+		if (!ev.IsOkay() || result == null) {
+			ev.DisplayError();
 			return;
 		}
 
