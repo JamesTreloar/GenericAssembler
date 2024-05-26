@@ -55,8 +55,6 @@ public class ErrorValue {
 	}
 
 	public void DisplayError() {
-		//TODO update with modified inputs and new error terms
-		// Missing*, Bad/ToLong setting errors with linenum, InvalidImmediateFormat
 		TextWriter errorWritter = Console.Error;
 		errorWritter.WriteLine("ERROR");
 		switch (errno) {
@@ -86,24 +84,32 @@ public class ErrorValue {
 				errorWritter.WriteLine("Instruction length needs to be equal to length for opcode, and address");
 				errorWritter.WriteLine($"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}");
 				break;
+			case ErrorNumbers.MissingNemonic:
+				errorWritter.WriteLine($"There is no nemonic field in the {lineNum}th instruction definition");
+				break;
+			case ErrorNumbers.MissingOpCode:
+				errorWritter.WriteLine($"There is no opcode field in the {lineNum}th instruction definition");
+				break;
 			case ErrorNumbers.BadOpCode:
-				errorWritter.WriteLine("Error in opcode format");
+				errorWritter.WriteLine($"Error in opcode format in the {lineNum}th instruction definition");
 				break;
 			case ErrorNumbers.OpCodeTooLong:
-				errorWritter.WriteLine("Opcode is too long for length provided");
+				errorWritter.WriteLine($"Opcode is too long for length provided in the {lineNum}th instruction definition");
 				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
 				break;
 			case ErrorNumbers.BadShamt:
-				errorWritter.WriteLine("Error in shamt format");
+				errorWritter.WriteLine($"Error in shamt format in the {lineNum}th instruction definition");
 				break;
 			case ErrorNumbers.ShamtTooLong:
-				errorWritter.WriteLine("Shamt is too long for length provided");
+				errorWritter.WriteLine($"Shamt is too long for length provided in the {lineNum}th instruction definition");
+				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
 				break;
 			case ErrorNumbers.BadFunct:
-				errorWritter.WriteLine("Error in funct format");
+				errorWritter.WriteLine($"Error in funct format in the {lineNum}th instruction definition");
 				break;
 			case ErrorNumbers.FunctTooLong:
-				errorWritter.WriteLine("Funct is too long for length provided");
+				errorWritter.WriteLine($"Funct is too long for length provided in the {lineNum}th instruction definition");
+				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
 				break;
 			case ErrorNumbers.InvalidInstructionFormat:
 				errorWritter.WriteLine($"Invalid instruction format ({errorDataString[0]}) " +
