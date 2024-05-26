@@ -32,87 +32,111 @@ public class SettingReader(string fileName) {
 		int instructionLen = config.InstructionLength;
 		int rSum = config.OpCodeLength + config.RegisterLength * 3 + config.FunctLength + config.ShamtLength;
 		if (rSum != instructionLen) {
-			ev = new(ErrorNumbers.InvalidRLength, new int[] {instructionLen, rSum});
+			ev = new(ErrorNumbers.InvalidRLength, new int[] { instructionLen, rSum });
 			return (null, ev);
 		}
 
 		int iSum = config.OpCodeLength + config.RegisterLength * 2 + config.ImmediateLength;
-		if (iSum != config.InstructionLength) {
-			ev = new(ErrorNumbers.InvalidILength, new int[] {instructionLen, rSum});
+		if (iSum != instructionLen) {
+			ev = new(ErrorNumbers.InvalidILength, new int[] { instructionLen, iSum });
 			return (null, ev);
 		}
 
 		int jSum = config.OpCodeLength + config.AddressLength;
-		if (jSum != config.InstructionLength) {
-			ev = new(ErrorNumbers.InvalidJLength, new int[] {instructionLen, rSum});
+		if (jSum != instructionLen) {
+			ev = new(ErrorNumbers.InvalidJLength, new int[] { instructionLen, jSum });
 			return (null, ev);
 		}
 
 		foreach (JsonNode jsonNode in instructions) {
-			Instruction add;
-			string nemonic = jsonNode!["Nemonic"]!.ToString();
-			int opcode;
-			bool success = int.TryParse(jsonNode!["OpCode"]!.ToString(), out opcode);
+			// Validate Nemonic
+			bool success = jsonNode.AsObject().ContainsKey("Nemonic");
 			if (!success) {
-				ev = new(ErrorNumbers.BadOpCode);
+				ev = new(ErrorNumbers.MissingNemonic, jsonNode.GetElementIndex());
+				return (null, ev);
+			}
+
+			string nemonic = jsonNode!["Nemonic"]!.ToString();
+
+			// Validate Format
+			success = jsonNode.AsObject().ContainsKey("Format");
+			if (!success) {
+				ev = new(ErrorNumbers.MissingFormat, jsonNode.GetElementIndex());
+				return (null, ev);
+			}
+
+			string format = jsonNode!["Format"]!.ToString();
+
+			// Validate Opcode
+			success = jsonNode.AsObject().ContainsKey("OpCode");
+			if (!success) {
+				ev = new(ErrorNumbers.MissingOpCode, jsonNode.GetElementIndex());
+				return (null, ev);
+			}
+
+			int opcode;
+			success = Utils.TryIntParse(jsonNode!["OpCode"]!.ToString(), out opcode);
+			if (!success) {
+				ev = new(ErrorNumbers.BadOpCode, jsonNode.GetElementIndex());
 				return (null, ev);
 			}
 
 			if (opcode >= 1 << config.OpCodeLength) {
-				ev = new(ErrorNumbers.OpCodeTooLong, new[] {opcode, 1 << config.OpCodeLength});
+				ev = new(ErrorNumbers.OpCodeTooLong, jsonNode.GetElementIndex(),
+					new[] { opcode, 1 << config.OpCodeLength });
 				return (null, ev);
 			}
-			
+
+			// Validate Shamt
+			int shamt;
+			success = jsonNode.AsObject().ContainsKey("Shamt");
+			if (!success) {
+				shamt = 0;
+			} else {
+				success = Utils.TryIntParse(jsonNode!["Shamt"]!.ToString(), out shamt);
+				if (!success) {
+					ev = new(ErrorNumbers.BadShamt, jsonNode.GetElementIndex());
+					return (null, ev);
+				}
+
+				if (shamt >= 1 << config.ShamtLength) {
+					ev = new(ErrorNumbers.ShamtTooLong, jsonNode.GetElementIndex(),
+						new[] { shamt, 1 << config.ShamtLength });
+					return (null, ev);
+				}
+			}
+
+			// Validate Funct
 			int funct;
-			switch (jsonNode!["Format"]!.ToString()) {
+			success = jsonNode.AsObject().ContainsKey("Funct");
+			if (!success) {
+				funct = 0;
+			} else {
+				success = Utils.TryIntParse(jsonNode!["Funct"]!.ToString(), out funct);
+				if (!success) {
+					ev = new(ErrorNumbers.BadFunct, jsonNode.GetElementIndex());
+					return (null, ev);
+				}
+
+				if (funct >= 1 << config.ShamtLength) {
+					ev = new(ErrorNumbers.FunctTooLong, jsonNode.GetElementIndex(),
+						new[] { funct, 1 << config.FunctLength });
+					return (null, ev);
+				}
+			}
+
+			Instruction add;
+			switch (format) {
 				case "R":
-					int shamt;
-					success = int.TryParse(jsonNode!["Shamt"]!.ToString(), out shamt);
-					if (!success) {
-						ev = new(ErrorNumbers.BadShamt);
-						return (null, ev);
-					}
-
-					if (shamt >= 1 << config.ShamtLength) {
-						ev = new(ErrorNumbers.ShamtTooLong, new[] {shamt, 1 << config.ShamtLength});
-						return (null, ev);
-					}
-					
-					success = int.TryParse(jsonNode!["Funct"]!.ToString(), out funct);
-					if (!success) {
-						ev = new(ErrorNumbers.BadFunct);
-						return (null, ev);
-					}
-
-					if (funct >= (1 << config.FunctLength)) {
-						ev = new(ErrorNumbers.FunctTooLong, new[] {funct, 1 << config.FunctLength});
-						return (null, ev);
-					}
-					
 					add = new(nemonic, InstructionFormat.R, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "RShift":
-					success = int.TryParse(jsonNode!["Funct"]!.ToString(), out funct);
-					if (!success) {
-						ev = new(ErrorNumbers.BadFunct);
-						return (null, ev);
-					}
-
-					if (funct >= 1 << config.FunctLength) {
-						ev = new(ErrorNumbers.FunctTooLong, new[] {funct, 1 << config.FunctLength});
-						return (null, ev);
-					}
-					
-					add = new(nemonic, InstructionFormat.RShift, opcode,
-						// the instruction will have a value for shamt which is used over the 0 here
-						0, (int)jsonNode!["Funct"]!);
+					add = new(nemonic, InstructionFormat.RShift, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "RSingle":
-					add = new(nemonic, InstructionFormat.RSingle,
-						opcode, (int)jsonNode!["Shamt"]!,
-						(int)jsonNode!["Funct"]!);
+					add = new(nemonic, InstructionFormat.RSingle, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "I":
@@ -132,7 +156,8 @@ public class SettingReader(string fileName) {
 					config.Instructions.Add(add);
 					break;
 				default:
-					ev = new(ErrorNumbers.InvalidInstructionFormat, new int[] {jsonNode.GetElementIndex()}, new string[]{ jsonNode!["Format"]!.ToString() });
+					ev = new(ErrorNumbers.InvalidInstructionFormat, jsonNode.GetElementIndex(),
+						new[] { jsonNode!["Format"]!.ToString() });
 					return (null, ev);
 			}
 		}
