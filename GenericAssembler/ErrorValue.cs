@@ -55,6 +55,8 @@ public class ErrorValue {
 	}
 
 	public void DisplayError() {
+		//TODO update with modified inputs and new error terms
+		// Missing*, Bad/ToLong setting errors with linenum, InvalidImmediateFormat
 		TextWriter errorWritter = Console.Error;
 		errorWritter.WriteLine("ERROR");
 		switch (errno) {
@@ -68,7 +70,7 @@ public class ErrorValue {
 				errorWritter.WriteLine("No instructions were provided in the json input.");
 				break;
 			case ErrorNumbers.InvalidRLength:
-				errorWritter.WriteLine("Invalid lengths for i-type instructions.");
+				errorWritter.WriteLine("Invalid lengths for r-type instructions.");
 				errorWritter.WriteLine(
 					"Instruction length needs to be equal to length for opcode, 2 registers, and immediate value");
 				errorWritter.WriteLine($"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}");
@@ -113,13 +115,20 @@ public class ErrorValue {
 			case ErrorNumbers.InvalidRegisterFormat:
 				errorWritter.WriteLine($"Invalid register format on line {lineNum}");
 				break;
+			case ErrorNumbers.InvalidImmediateFormat:
+				errorWritter.WriteLine($"Immediate value on line {lineNum} is of an invalid format");
+				break;
 			case ErrorNumbers.InvalidImmediateLength:
 				errorWritter.WriteLine($"Immediate on line {lineNum} does not fit within the space provided");
+				break;
+			case ErrorNumbers.InvalidAddressFormat:
+				errorWritter.WriteLine($"Address value on line {lineNum} is of an invalid format");
 				break;
 			case ErrorNumbers.InvalidAddressLength:
 				errorWritter.WriteLine($"Address on line {lineNum} does not fit within the space provided");
 				break;
 			default:
+				errorWritter.WriteLine(errno.ToString());
 				throw new NotImplementedException();
 		}
 	}
@@ -134,6 +143,9 @@ public enum ErrorNumbers {
 	InvalidRLength,
 	InvalidILength,
 	InvalidJLength,
+	MissingNemonic,
+	MissingFormat,
+	MissingOpCode,
 	BadOpCode,
 	OpCodeTooLong,
 	BadShamt,
@@ -144,5 +156,7 @@ public enum ErrorNumbers {
 	InvalidInstrInAsm,
 	InvalidRegisterFormat,
 	InvalidImmediateLength,
-	InvalidAddressLength
+	InvalidImmediateFormat,
+	InvalidAddressLength,
+	InvalidAddressFormat
 }

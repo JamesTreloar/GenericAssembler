@@ -31,6 +31,8 @@ public class ProcessFile(Configuration configuration) {
 			data = data.PadLeft(configuration.OpCodeLength, '0');
 
 			calculatedInstruction += data;
+			bool success;
+			int imme;
 			switch (instruction.Format) {
 				case InstructionFormat.R:
 					if (!ValidateRegisters(temp[1], temp[2], temp[3])) {
@@ -63,52 +65,75 @@ public class ProcessFile(Configuration configuration) {
 
 					break;
 				case InstructionFormat.I:
+					success = Utils.TryIntParse(temp[3], out imme);
+					if (!success) {
+						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
+						return (null, ev);
+					}
+
 					if (!ValidateRegisters(temp[1], temp[2])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
-					} else if (!ValidateImmediate(int.Parse(temp[3]))) {
+					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType(temp[1], temp[2], int.Parse(temp[3]));
+						calculatedInstruction += ProcessIType(temp[1], temp[2], imme);
 					}
 
 					break;
 				case InstructionFormat.IMem:
-					string[] foo = temp[2].Split("(");
-					if (!ValidateRegisters(temp[1], foo[1][..^1])) {
+					string[] memSplit = temp[2].Split("(");
+					success = Utils.TryIntParse(memSplit[0], out imme);
+					if (!success) {
+						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
+						return (null, ev);
+					}
+
+					if (!ValidateRegisters(temp[1], memSplit[1][..^1])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
-					} else if (!ValidateImmediate(int.Parse(foo[0]))) {
+					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType(temp[1], foo[1][..^1], int.Parse(foo[0]));
+						calculatedInstruction += ProcessIType(temp[1], memSplit[1][..^1], imme);
 					}
 
 					break;
 				case InstructionFormat.ISingle:
+					success = Utils.TryIntParse(temp[2], out imme);
+					if (!success) {
+						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
+						failed = true;
+					}
+
 					if (!ValidateRegisters(temp[1])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
-					} else if (!ValidateImmediate(int.Parse(temp[2]))) {
+					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType("$0", temp[1], int.Parse(temp[2]));
+						calculatedInstruction += ProcessIType("$0", temp[1], imme);
 					}
 
 					break;
 				case InstructionFormat.J:
-					if (!ValidateAddress(int.Parse(temp[1]))) {
+					int addr;
+					success = Utils.TryIntParse(temp[3], out addr);
+					if (!success) {
+						ev = new(ErrorNumbers.InvalidAddressFormat, lineNum);
+						return (null, ev);
+					}
+
+					if (!ValidateAddress(addr)) {
 						ev = new(ErrorNumbers.InvalidAddressLength, lineNum);
 						failed = true;
 						break;
 					}
-
-					string address = Convert.ToString(int.Parse(temp[1]), 2);
-					address = address.PadLeft(configuration.AddressLength, '0');
-					calculatedInstruction += address;
+					
+					calculatedInstruction += Utils.BinaryStringConvert(addr, configuration.AddressLength);;
 					break;
 				default:
 					throw new NotImplementedException();
@@ -170,8 +195,8 @@ public class ProcessFile(Configuration configuration) {
 		string calculatedInstruction = "";
 		calculatedInstruction += ProcessRegister(rs);
 		calculatedInstruction += ProcessRegister(rt);
-		calculatedInstruction += Convert.ToString(imme, 2).PadLeft(configuration.ImmediateLength, '0');
-		;
+		calculatedInstruction += Utils.BinaryStringConvert(imme, configuration.ImmediateLength);
+		
 		return calculatedInstruction;
 	}
 
