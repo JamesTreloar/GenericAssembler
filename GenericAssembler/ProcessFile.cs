@@ -121,7 +121,7 @@ public class ProcessFile(Configuration configuration) {
 					break;
 				case InstructionFormat.J:
 					int addr;
-					success = Utils.TryIntParse(temp[3], out addr);
+					success = Utils.TryIntParse(temp[1], out addr);
 					if (!success) {
 						ev = new(ErrorNumbers.InvalidAddressFormat, lineNum);
 						return (null, ev);
@@ -170,6 +170,12 @@ public class ProcessFile(Configuration configuration) {
 			if (r.Length == 1) {
 				return false;
 			}
+
+			if (!int.TryParse(r[1..], out int _)) {
+				if (!configuration.RegisterMap.ContainsKey(r[1..])) {
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -201,7 +207,12 @@ public class ProcessFile(Configuration configuration) {
 	}
 
 	private string ProcessRegister(string registerCommand) {
-		string reg = Convert.ToString(int.Parse(registerCommand[1..]), 2);
+		int regNum;
+		bool res = int.TryParse(registerCommand[1..], out regNum);
+		if (!res) {
+			regNum = configuration.RegisterMap[registerCommand[1..]];
+		}
+		string reg = Convert.ToString(regNum, 2);
 		reg = reg.PadLeft(configuration.RegisterLength, '0');
 		return reg;
 	}

@@ -8,6 +8,8 @@ public class Configuration {
 	public int AddressLength { get; set; }
 	public int ShamtLength { get; set; }
 	public int FunctLength { get; set; }
-    
-    public IList<Instruction> Instructions = new List<Instruction>();
+
+	public Dictionary<string, int> RegisterMap = new();
+	
+    public List<Instruction> Instructions = new();
 }

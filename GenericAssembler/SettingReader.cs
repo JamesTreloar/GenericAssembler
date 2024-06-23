@@ -161,6 +161,12 @@ public class SettingReader(string fileName) {
 					return (null, ev);
 			}
 		}
+		
+		JsonArray registers = node!["Registers"]!.AsArray();
+
+		foreach (JsonNode register in registers) {
+			config.RegisterMap[register!["name"]!.ToString()] = int.Parse(register!["number"]!.ToString());
+		}
 
 		return (config, ev);
 	}
