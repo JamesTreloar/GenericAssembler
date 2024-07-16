@@ -1,7 +1,6 @@
 ﻿namespace GenericAssembler; 
 
 internal abstract class Program {
-
 	public static void Main(string[] args) {
 		ErrorValue ev;
 		if (args.Length != 2) {
@@ -9,7 +8,9 @@ internal abstract class Program {
 			ev.DisplayError();
 			return;
 		}
-		SettingReader settingReader = new(args[0]);
+
+		string configInput = File.ReadAllText(args[0]);
+		SettingReader settingReader = new(configInput);
 		
 		(Configuration? configuration, ev) = settingReader.Read();
 		if (!ev.IsOkay() || configuration == null) {

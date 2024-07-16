@@ -1,7 +1,7 @@
 namespace GenericAssembler;
 
 public class ErrorValue {
-	private ErrorNumbers errno;
+	public ErrorNumbers errno { get; }
 	private int lineNum;
 	private int[] errorDataInt;
 	private string[] errorDataString;

@@ -3,17 +3,15 @@ using System.Text.Json.Nodes;
 
 namespace GenericAssembler;
 
-public class SettingReader(string fileName) {
+public class SettingReader(string jsonString) {
 	public (Configuration?, ErrorValue) Read() {
-		string jsonString = File.ReadAllText(fileName);
 		JsonNode node;
 		ErrorValue ev = new(ErrorNumbers.Okay);
 		Configuration? config;
 		try {
 			node = JsonNode.Parse(jsonString)!;
-
 			config = JsonSerializer.Deserialize<Configuration>(jsonString);
-		} catch (Exception e) {
+		} catch {
 			ev = new(ErrorNumbers.InvalidJson);
 			return (null, ev);
 		}
@@ -32,19 +30,19 @@ public class SettingReader(string fileName) {
 		int instructionLen = config.InstructionLength;
 		int rSum = config.OpCodeLength + config.RegisterLength * 3 + config.FunctLength + config.ShamtLength;
 		if (rSum != instructionLen) {
-			ev = new(ErrorNumbers.InvalidRLength, new int[] { instructionLen, rSum });
+			ev = new(ErrorNumbers.InvalidRLength, new [] { instructionLen, rSum });
 			return (null, ev);
 		}
 
 		int iSum = config.OpCodeLength + config.RegisterLength * 2 + config.ImmediateLength;
 		if (iSum != instructionLen) {
-			ev = new(ErrorNumbers.InvalidILength, new int[] { instructionLen, iSum });
+			ev = new(ErrorNumbers.InvalidILength, new [] { instructionLen, iSum });
 			return (null, ev);
 		}
 
 		int jSum = config.OpCodeLength + config.AddressLength;
 		if (jSum != instructionLen) {
-			ev = new(ErrorNumbers.InvalidJLength, new int[] { instructionLen, jSum });
+			ev = new(ErrorNumbers.InvalidJLength, new [] { instructionLen, jSum });
 			return (null, ev);
 		}
 
@@ -161,11 +159,12 @@ public class SettingReader(string fileName) {
 					return (null, ev);
 			}
 		}
-		
-		JsonArray registers = node!["Registers"]!.AsArray();
 
-		foreach (JsonNode register in registers) {
-			config.RegisterMap[register!["name"]!.ToString()] = int.Parse(register!["number"]!.ToString());
+		if (node.AsObject().ContainsKey("Registers")) {
+			JsonArray registers = node!["Registers"]!.AsArray();
+			foreach (JsonNode register in registers) {
+				config.RegisterMap[register!["name"]!.ToString()] = int.Parse(register!["number"]!.ToString());
+			}
 		}
 
 		return (config, ev);
