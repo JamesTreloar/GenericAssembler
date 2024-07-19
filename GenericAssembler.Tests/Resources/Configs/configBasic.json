@@ -1,0 +1,51 @@
+{
+  "InstructionLength": 16,
+  "OpCodeLength": 4,
+  "RegisterLength": 4,
+  "ImmediateLength": 4,
+  "AddressLength": 12,
+  "ShamtLength": 0,
+  "FunctLength": 0,
+  "Instructions": [
+    {
+      "Nemonic": "add",
+      "Format": "R",
+      "OpCode": 1
+    }, 
+    {
+      "Nemonic": "sub",
+      "Format": "R",
+      "OpCode": 2
+    },
+    {
+      "Nemonic": "addi",
+      "Format": "I",
+      "OpCode": 3
+    },
+    {
+      "Nemonic": "jump",
+      "Format": "J",
+      "OpCode": 4
+    },
+    {
+      "Nemonic": "lw",
+      "Format": "IMem",
+      "OpCode": 5
+    },
+    {
+      "Nemonic": "slr",
+      "Format": "RShift",
+      "OpCode": 6
+    },
+    {
+      "Nemonic": "lui",
+      "Format":"ISingle",
+      "OpCode": 7
+    },
+    {
+      "Nemonic": "jr",
+      "Format": "RSingle",
+      "OpCode": 8
+    }
+  ]
+}
