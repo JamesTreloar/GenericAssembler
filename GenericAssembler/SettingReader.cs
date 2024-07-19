@@ -3,9 +3,8 @@ using System.Text.Json.Nodes;
 
 namespace GenericAssembler;
 
-public class SettingReader(string fileName) {
+public class SettingReader(string jsonString) {
 	public (Configuration?, ErrorValue) Read() {
-		string jsonString = File.ReadAllText(fileName);
 		JsonNode node;
 		ErrorValue ev = new(ErrorNumbers.Okay);
 		Configuration? config;
@@ -161,11 +160,14 @@ public class SettingReader(string fileName) {
 					return (null, ev);
 			}
 		}
-		
-		JsonArray registers = node!["Registers"]!.AsArray();
 
-		foreach (JsonNode register in registers) {
-			config.RegisterMap[register!["name"]!.ToString()] = int.Parse(register!["number"]!.ToString());
+
+		if (node.AsObject().ContainsKey("Registers")) {
+			JsonArray registers = node!["Registers"]!.AsArray();
+
+			foreach (JsonNode register in registers) {
+				config.RegisterMap[register!["name"]!.ToString()] = int.Parse(register!["number"]!.ToString());
+			}
 		}
 
 		return (config, ev);

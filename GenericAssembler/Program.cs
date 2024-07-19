@@ -9,7 +9,10 @@ internal abstract class Program {
 			ev.DisplayError();
 			return;
 		}
-		SettingReader settingReader = new(args[0]);
+
+		string jsonStringConfig = File.ReadAllText(args[0]); 
+		
+		SettingReader settingReader = new(jsonStringConfig);
 		
 		(Configuration? configuration, ev) = settingReader.Read();
 		if (!ev.IsOkay() || configuration == null) {
