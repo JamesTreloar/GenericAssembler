@@ -68,4 +68,30 @@ public class ProcessFileTest {
 		
 		Assert.That(actual, Is.EqualTo(expected));
 	}
+
+	[Test]
+	public void AssembleLabel() {
+		string configInput = File.ReadAllText(PrePath + "Configs/configLabel.json");
+		SettingReader settingReader = new(configInput);
+		(Configuration? configuration, _) = settingReader.Read();
+		
+		Assert.That(configuration, Is.Not.Null);
+		
+		string[] assembly = File.ReadAllLines(PrePath + "Assembly/label.s");
+		Assert.That(assembly, Is.Not.Null);
+		ProcessFile processFile = new (configuration);
+		(List<string> actual, ErrorValue ev ) = processFile.Run(assembly);
+
+		List<string> expected = new() {
+			"0011000000010001",
+			"0011000000101010",
+			"1001000100100010",
+			"0011000100010001",
+			"0100111111111101"
+		};
+		
+		Assert.That(ev.IsOkay);
+		
+		Assert.That(actual, Is.EqualTo(expected));
+	}
 }

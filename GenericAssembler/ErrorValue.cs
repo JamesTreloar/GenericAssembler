@@ -116,7 +116,7 @@ public class ErrorValue {
 				                  $"encountered on the {errorDataInt[0]}th instruction definition.");
 				break;
 			case ErrorNumbers.InvalidInstrInAsm:
-				errorWritter.WriteLine($"Invalid instruction {errorDataInt[0]} used in assembly file on line {lineNum}");
+				errorWritter.WriteLine($"Invalid instruction {errorDataString[0]} used in assembly file on line {lineNum}");
 				break;
 			case ErrorNumbers.InvalidRegisterFormat:
 				errorWritter.WriteLine($"Invalid register format on line {lineNum}");
