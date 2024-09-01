@@ -5,11 +5,16 @@ namespace GenericAssembler.Tests;
 public class SettingReaderTest {
 	private const string PrePath = "../../../Resources/Configs/";
 	
+	private (Configuration?, ErrorValue) GetConfiguration(string name) {
+		string configInput = File.ReadAllText(PrePath + name);
+		SettingReader settingReader = new(configInput);
+		return settingReader.Read();
+		
+	}
+	
 	[Test]
 	public void ConfigSimple() {
-		string configInput = File.ReadAllText(PrePath + "configBasic.json");
-		SettingReader settingReader = new(configInput);
-		(Configuration? configuration, ErrorValue ev) = settingReader.Read();
+		(Configuration? configuration, ErrorValue ev) = GetConfiguration("configBasic.json");
 
         Assert.Multiple(() => {
             Assert.That(ev.IsOkay);
@@ -43,9 +48,7 @@ public class SettingReaderTest {
 
 	[Test]
 	public void ConfigWithRegMap() {
-		string configInput = File.ReadAllText(PrePath + "configRegMap.json");
-		SettingReader settingReader = new(configInput);
-		(Configuration? configuration, ErrorValue ev) = settingReader.Read();
+		(Configuration? configuration, ErrorValue ev) = GetConfiguration("configRegMap.json");
 
 		Assert.Multiple(() => {
 			Assert.That(ev.IsOkay);

@@ -2,24 +2,31 @@ namespace GenericAssembler;
 
 public class ProcessFile(Configuration configuration) {
 	public (List<string>?, ErrorValue) Run(string[] lines) {
-		List<string> result = new();
+		List<PartialInstruction> partialInstructions = new();
+		Dictionary<string, int> labelLocations = new();
 		ErrorValue ev = new(ErrorNumbers.Okay);
 		int lineNum = 0;
 		bool failed = false;
+		bool skipped = false;
 		foreach (string line in lines) {
 			lineNum++;
 			string t = line.Trim();
 			if (t[0] == '#') {
 				continue;
 			}
+			
+			char[] separators = { ' ', ',', '\t' };
+			string[] splitLine = t.Split(separators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-			string[] temp = t.Split(',', ' ');
-			temp = temp.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-
+			if (splitLine.Length == 1 && splitLine[0][^1] == ':') {
+				labelLocations.Add(splitLine[0][..^1], partialInstructions.Count);
+				continue;
+			}
+			
 			List<Instruction> definitions = new(configuration.Instructions);
-			int index = definitions.FindIndex(x => x.Nemonic == temp[0]);
+			int index = definitions.FindIndex(x => x.Nemonic == splitLine[0]);
 			if (index == -1) {
-				ev = new(ErrorNumbers.InvalidInstrInAsm, lineNum, new string[] { temp[0] });
+				ev = new(ErrorNumbers.InvalidInstrInAsm, lineNum, new string[] { splitLine[0] });
 				return (null, ev);
 			}
 
@@ -35,96 +42,100 @@ public class ProcessFile(Configuration configuration) {
 			int imme;
 			switch (instruction.Format) {
 				case InstructionFormat.R:
-					if (!ValidateRegisters(temp[1], temp[2], temp[3])) {
+					if (!ValidateRegisters(splitLine[1], splitLine[2], splitLine[3])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else {
 						calculatedInstruction +=
-							ProcessRType(temp[2], temp[3], temp[1], instruction.Shamt, instruction.Funct);
+							ProcessRType(splitLine[2], splitLine[3], splitLine[1], instruction.Shamt, instruction.Funct);
 					}
 
 					break;
 				case InstructionFormat.RShift:
-					if (!ValidateRegisters(temp[1], temp[2])) {
+					if (!ValidateRegisters(splitLine[1], splitLine[2])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else {
 						calculatedInstruction +=
-							ProcessRType("$0", temp[1], temp[2], instruction.Shamt, instruction.Funct);
+							ProcessRType("$0", splitLine[1], splitLine[2], instruction.Shamt, instruction.Funct);
 					}
 
 					break;
 				case InstructionFormat.RSingle:
-					if (!ValidateRegisters(temp[1])) {
+					if (!ValidateRegisters(splitLine[1])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else {
 						calculatedInstruction +=
-							ProcessRType(temp[1], "$0", "$0", instruction.Shamt, instruction.Funct);
+							ProcessRType(splitLine[1], "$0", "$0", instruction.Shamt, instruction.Funct);
 					}
 
 					break;
 				case InstructionFormat.I:
-					success = Utils.TryIntParse(temp[3], out imme);
+					success = Utils.TryIntParse(splitLine[3], out imme);
 					if (!success) {
-						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
-						return (null, ev);
+						partialInstructions.Add(new(
+							calculatedInstruction + ProcessRegister(splitLine[1]) + ProcessRegister(splitLine[2]),
+							splitLine[3], configuration.ImmediateLength));
+						skipped = true;
+						break;
 					}
 
-					if (!ValidateRegisters(temp[1], temp[2])) {
+					if (!ValidateRegisters(splitLine[1], splitLine[2])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType(temp[1], temp[2], imme);
+						calculatedInstruction += ProcessIType(splitLine[1], splitLine[2], imme);
 					}
 
 					break;
 				case InstructionFormat.IMem:
-					string[] memSplit = temp[2].Split("(");
+					string[] memSplit = splitLine[2].Split("(");
 					success = Utils.TryIntParse(memSplit[0], out imme);
 					if (!success) {
 						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
-						return (null, ev);
+						failed = true;
 					}
 
-					if (!ValidateRegisters(temp[1], memSplit[1][..^1])) {
+					if (!ValidateRegisters(splitLine[1], memSplit[1][..^1])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType(temp[1], memSplit[1][..^1], imme);
+						calculatedInstruction += ProcessIType(splitLine[1], memSplit[1][..^1], imme);
 					}
 
 					break;
 				case InstructionFormat.ISingle:
-					success = Utils.TryIntParse(temp[2], out imme);
+					success = Utils.TryIntParse(splitLine[2], out imme);
 					if (!success) {
 						ev = new(ErrorNumbers.InvalidImmediateFormat, lineNum);
 						failed = true;
 					}
 
-					if (!ValidateRegisters(temp[1])) {
+					if (!ValidateRegisters(splitLine[1])) {
 						ev = new(ErrorNumbers.InvalidRegisterFormat, lineNum);
 						failed = true;
 					} else if (!ValidateImmediate(imme)) {
 						ev = new(ErrorNumbers.InvalidImmediateLength, lineNum);
 						failed = true;
 					} else {
-						calculatedInstruction += ProcessIType("$0", temp[1], imme);
+						calculatedInstruction += ProcessIType("$0", splitLine[1], imme);
 					}
 
 					break;
 				case InstructionFormat.J:
 					int addr;
-					success = Utils.TryIntParse(temp[1], out addr);
+					success = Utils.TryIntParse(splitLine[1], out addr);
 					if (!success) {
-						ev = new(ErrorNumbers.InvalidAddressFormat, lineNum);
-						return (null, ev);
+						partialInstructions.Add(new(calculatedInstruction, splitLine[1], configuration.AddressLength));
+						skipped = true;
+						break;
 					}
 
 					if (!ValidateAddress(addr)) {
@@ -133,7 +144,7 @@ public class ProcessFile(Configuration configuration) {
 						break;
 					}
 					
-					calculatedInstruction += Utils.BinaryStringConvert(addr, configuration.AddressLength);;
+					calculatedInstruction += Utils.BinaryStringConvert(addr, configuration.AddressLength);
 					break;
 				default:
 					throw new NotImplementedException();
@@ -143,7 +154,24 @@ public class ProcessFile(Configuration configuration) {
 				return (null, ev);
 			}
 
-			result.Add(calculatedInstruction);
+			if (skipped) {
+				skipped = false;
+				continue;
+			}
+
+			partialInstructions.Add(new(calculatedInstruction));
+		}
+		
+		List<string> result = new();
+
+		for (int i = 0; i < partialInstructions.Count; i++) {
+			PartialInstruction partialInstruction = partialInstructions[i];
+			if (partialInstruction.jumpTo == null) {
+				result.Add(partialInstruction.generated);
+			} else {
+				int addr = labelLocations[partialInstruction.jumpTo] - i - 1;
+				result.Add(partialInstruction.generated + Utils.BinaryStringConvert(addr, partialInstruction.jumpLength));
+			}
 		}
 
 		return (result, ev);
