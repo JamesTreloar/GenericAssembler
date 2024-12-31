@@ -11,16 +11,17 @@ public class ProcessFileTest {
 	public void AssembleBasic() {
 		string configInput = File.ReadAllText(PrePath + "Configs/configBasic.json");
 		SettingReader settingReader = new(configInput);
-		(Configuration? configuration, _) = settingReader.Read();
+		Result<Configuration> configuration =  settingReader.Read();
 
-		Assert.That(configuration, Is.Not.Null);
+		Assert.That(configuration.IsOk);
 		
 		string[] assembly = File.ReadAllLines(PrePath + "Assembly/basic.s");
 		Assert.That(assembly, Is.Not.Null);
-		ProcessFile processFile = new (configuration);
-		(List<string> actual, ErrorValue ev ) = processFile.Run(assembly);
+		ProcessFile processFile = new (configuration.Value);
+		Result<List<string>> result = processFile.Run(assembly);
 
-
+		Assert.That(result.IsOk);
+		
 		List<string> expected = new() {
 			"0011000000010010",
 			"0011000000100011",
@@ -33,24 +34,25 @@ public class ProcessFileTest {
 			"1000110000000000",
 		};
 		
-		Assert.That(ev.IsOkay);
 		
-		Assert.That(actual, Is.EqualTo(expected));
+		
+		Assert.That(result.Value, Is.EqualTo(expected));
 	}
 	
 	[Test]
 	public void AssembleRegMap() {
 		string configInput = File.ReadAllText(PrePath + "Configs/configRegMap.json");
 		SettingReader settingReader = new(configInput);
-		(Configuration? configuration, _) = settingReader.Read();
+		Result<Configuration> configuration =  settingReader.Read();
 
-		Assert.That(configuration, Is.Not.Null);
+		Assert.That(configuration.IsOk);
 		
 		string[] assembly = File.ReadAllLines(PrePath + "Assembly/regMap.s");
 		Assert.That(assembly, Is.Not.Null);
-		ProcessFile processFile = new (configuration);
-		(List<string> actual, ErrorValue ev ) = processFile.Run(assembly);
+		ProcessFile processFile = new (configuration.Value);
+		Result<List<string>> result = processFile.Run(assembly);
 
+		Assert.That(result.IsOk);
 
 		List<string> expected = new() {
 			"0011000101010010",
@@ -64,23 +66,24 @@ public class ProcessFileTest {
 			"1000101100000000",
 		};
 		
-		Assert.That(ev.IsOkay);
 		
-		Assert.That(actual, Is.EqualTo(expected));
+		
+		Assert.That(result.Value, Is.EqualTo(expected));
 	}
 
 	[Test]
 	public void AssembleLabel() {
 		string configInput = File.ReadAllText(PrePath + "Configs/configLabel.json");
 		SettingReader settingReader = new(configInput);
-		(Configuration? configuration, _) = settingReader.Read();
+		Result<Configuration> configuration =  settingReader.Read();
 		
-		Assert.That(configuration, Is.Not.Null);
+		Assert.That(configuration.IsOk);
 		
 		string[] assembly = File.ReadAllLines(PrePath + "Assembly/label.s");
 		Assert.That(assembly, Is.Not.Null);
-		ProcessFile processFile = new (configuration);
-		(List<string> actual, ErrorValue ev ) = processFile.Run(assembly);
+		ProcessFile processFile = new (configuration.Value);
+		Result<List<string>> result = processFile.Run(assembly);
+		Assert.That(result.IsOk);
 
 		List<string> expected = new() {
 			"0011000000010001",
@@ -90,8 +93,6 @@ public class ProcessFileTest {
 			"0100111111111101"
 		};
 		
-		Assert.That(ev.IsOkay);
-		
-		Assert.That(actual, Is.EqualTo(expected));
+		Assert.That(result.Value, Is.EqualTo(expected));
 	}
 }

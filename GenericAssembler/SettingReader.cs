@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 namespace GenericAssembler;
 
 public class SettingReader(string jsonString) {
-	public (Configuration?, ErrorValue) Read() {
+	public Result<Configuration> Read() {
 		JsonNode node;
 		ErrorValue ev = new(ErrorNumbers.Okay);
 		Configuration? config;
@@ -14,37 +14,37 @@ public class SettingReader(string jsonString) {
 			config = JsonSerializer.Deserialize<Configuration>(jsonString);
 		} catch (Exception e) {
 			ev = new(ErrorNumbers.InvalidJson);
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		if (config == null) {
 			ev = new(ErrorNumbers.InvalidJson);
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		JsonArray instructions = node!["Instructions"]!.AsArray();
 		if (instructions.Count < 1) {
 			ev = new(ErrorNumbers.NoInstrInJson);
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		int instructionLen = config.InstructionLength;
 		int rSum = config.OpCodeLength + config.RegisterLength * 3 + config.FunctLength + config.ShamtLength;
 		if (rSum != instructionLen) {
 			ev = new(ErrorNumbers.InvalidRLength, new int[] { instructionLen, rSum });
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		int iSum = config.OpCodeLength + config.RegisterLength * 2 + config.ImmediateLength;
 		if (iSum != instructionLen) {
 			ev = new(ErrorNumbers.InvalidILength, new int[] { instructionLen, iSum });
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		int jSum = config.OpCodeLength + config.AddressLength;
 		if (jSum != instructionLen) {
 			ev = new(ErrorNumbers.InvalidJLength, new int[] { instructionLen, jSum });
-			return (null, ev);
+			return Result<Configuration>.Err(ev);
 		}
 
 		foreach (JsonNode jsonNode in instructions) {
@@ -52,7 +52,7 @@ public class SettingReader(string jsonString) {
 			bool success = jsonNode.AsObject().ContainsKey("Nemonic");
 			if (!success) {
 				ev = new(ErrorNumbers.MissingNemonic, jsonNode.GetElementIndex());
-				return (null, ev);
+				return Result<Configuration>.Err(ev);
 			}
 
 			string nemonic = jsonNode!["Nemonic"]!.ToString();
@@ -61,7 +61,7 @@ public class SettingReader(string jsonString) {
 			success = jsonNode.AsObject().ContainsKey("Format");
 			if (!success) {
 				ev = new(ErrorNumbers.MissingFormat, jsonNode.GetElementIndex());
-				return (null, ev);
+				return Result<Configuration>.Err(ev);
 			}
 
 			string format = jsonNode!["Format"]!.ToString();
@@ -70,20 +70,20 @@ public class SettingReader(string jsonString) {
 			success = jsonNode.AsObject().ContainsKey("OpCode");
 			if (!success) {
 				ev = new(ErrorNumbers.MissingOpCode, jsonNode.GetElementIndex());
-				return (null, ev);
+				return Result<Configuration>.Err(ev);
 			}
 
 			int opcode;
 			success = Utils.TryIntParse(jsonNode!["OpCode"]!.ToString(), out opcode);
 			if (!success) {
 				ev = new(ErrorNumbers.BadOpCode, jsonNode.GetElementIndex());
-				return (null, ev);
+				return Result<Configuration>.Err(ev);
 			}
 
 			if (opcode >= 1 << config.OpCodeLength) {
 				ev = new(ErrorNumbers.OpCodeTooLong, jsonNode.GetElementIndex(),
 					new[] { opcode, 1 << config.OpCodeLength });
-				return (null, ev);
+				return Result<Configuration>.Err(ev);
 			}
 
 			// Validate Shamt
@@ -95,13 +95,13 @@ public class SettingReader(string jsonString) {
 				success = Utils.TryIntParse(jsonNode!["Shamt"]!.ToString(), out shamt);
 				if (!success) {
 					ev = new(ErrorNumbers.BadShamt, jsonNode.GetElementIndex());
-					return (null, ev);
+					return Result<Configuration>.Err(ev);
 				}
 
 				if (shamt >= 1 << config.ShamtLength) {
 					ev = new(ErrorNumbers.ShamtTooLong, jsonNode.GetElementIndex(),
 						new[] { shamt, 1 << config.ShamtLength });
-					return (null, ev);
+					return Result<Configuration>.Err(ev);
 				}
 			}
 
@@ -114,13 +114,13 @@ public class SettingReader(string jsonString) {
 				success = Utils.TryIntParse(jsonNode!["Funct"]!.ToString(), out funct);
 				if (!success) {
 					ev = new(ErrorNumbers.BadFunct, jsonNode.GetElementIndex());
-					return (null, ev);
+					return Result<Configuration>.Err(ev);
 				}
 
 				if (funct >= 1 << config.ShamtLength) {
 					ev = new(ErrorNumbers.FunctTooLong, jsonNode.GetElementIndex(),
 						new[] { funct, 1 << config.FunctLength });
-					return (null, ev);
+					return Result<Configuration>.Err(ev);
 				}
 			}
 
@@ -157,7 +157,7 @@ public class SettingReader(string jsonString) {
 				default:
 					ev = new(ErrorNumbers.InvalidInstructionFormat, jsonNode.GetElementIndex(),
 						new[] { jsonNode!["Format"]!.ToString() });
-					return (null, ev);
+					return Result<Configuration>.Err(ev);
 			}
 		}
 
@@ -170,6 +170,6 @@ public class SettingReader(string jsonString) {
 			}
 		}
 
-		return (config, ev);
+		return Result<Configuration>.Ok(config);
 	}
 }

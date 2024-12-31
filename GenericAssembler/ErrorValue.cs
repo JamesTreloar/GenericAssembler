@@ -54,88 +54,61 @@ public class ErrorValue {
 		return errno == ErrorNumbers.Okay;
 	}
 
-	public void DisplayError() {
-		TextWriter errorWritter = Console.Error;
-		errorWritter.WriteLine("ERROR");
+
+	public string ToString() {
 		switch (errno) {
-			case ErrorNumbers.InvalidOptions:
-				errorWritter.WriteLine("USAGE: ./GenericAssembler schema.json input.s");
-				break;
 			case ErrorNumbers.InvalidJson:
-				errorWritter.WriteLine("Invalid JSON provided");
-				break;
+				return "Invalid JSON provided";
 			case ErrorNumbers.NoInstrInJson:
-				errorWritter.WriteLine("No instructions were provided in the json input.");
-				break;
+				return "No instructions were provided in the json input.";
 			case ErrorNumbers.InvalidRLength:
-				errorWritter.WriteLine("Invalid lengths for r-type instructions.");
-				errorWritter.WriteLine(
-					"Instruction length needs to be equal to length for opcode, 2 registers, and immediate value");
-				errorWritter.WriteLine($"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}");
-				break;
+				return "Invalid lengths for r-type instructions." +
+				       "Instruction length needs to be equal to length for opcode, 2 registers, and immediate value" +
+				       $"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}";
 			case ErrorNumbers.InvalidILength:
-				errorWritter.WriteLine("Invalid lengths for i-type instructions.");
-				errorWritter.WriteLine(
-					"Instruction length needs to be equal to length for opcode, 2 registers, and immediate value");
-				errorWritter.WriteLine($"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}");
-				break;
+				return "Invalid lengths for i-type instructions." +
+				       "Instruction length needs to be equal to length for opcode, 2 registers, and immediate value" +
+				       $"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}";
 			case ErrorNumbers.InvalidJLength:
-				errorWritter.WriteLine("Invalid lengths for j-type instructions.");
-				errorWritter.WriteLine("Instruction length needs to be equal to length for opcode, and address");
-				errorWritter.WriteLine($"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}");
-				break;
+				return "Invalid lengths for j-type instructions." +
+				       "Instruction length needs to be equal to length for opcode, and address" +
+				       $"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}";
 			case ErrorNumbers.MissingNemonic:
-				errorWritter.WriteLine($"There is no nemonic field in the {lineNum}th instruction definition");
-				break;
+				return $"There is no nemonic field in the {lineNum}th instruction definition";
 			case ErrorNumbers.MissingOpCode:
-				errorWritter.WriteLine($"There is no opcode field in the {lineNum}th instruction definition");
-				break;
+				return $"There is no opcode field in the {lineNum}th instruction definition";
 			case ErrorNumbers.BadOpCode:
-				errorWritter.WriteLine($"Error in opcode format in the {lineNum}th instruction definition");
-				break;
+				return $"Error in opcode format in the {lineNum}th instruction definition";
 			case ErrorNumbers.OpCodeTooLong:
-				errorWritter.WriteLine($"Opcode is too long for length provided in the {lineNum}th instruction definition");
-				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
-				break;
+				return $"Opcode is too long for length provided in the {lineNum}th instruction definition" +
+				       $"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}";
 			case ErrorNumbers.BadShamt:
-				errorWritter.WriteLine($"Error in shamt format in the {lineNum}th instruction definition");
-				break;
+				return $"Error in shamt format in the {lineNum}th instruction definition";
 			case ErrorNumbers.ShamtTooLong:
-				errorWritter.WriteLine($"Shamt is too long for length provided in the {lineNum}th instruction definition");
-				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
-				break;
+				return $"Shamt is too long for length provided in the {lineNum}th instruction definition" +
+				       $"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}";
 			case ErrorNumbers.BadFunct:
-				errorWritter.WriteLine($"Error in funct format in the {lineNum}th instruction definition");
-				break;
+				return $"Error in funct format in the {lineNum}th instruction definition";
 			case ErrorNumbers.FunctTooLong:
-				errorWritter.WriteLine($"Funct is too long for length provided in the {lineNum}th instruction definition");
-				errorWritter.WriteLine($"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}");
-				break;
+				return $"Funct is too long for length provided in the {lineNum}th instruction definition" +
+				       $"Provided value is {errorDataInt[0]}, when maximum value is {errorDataInt[1]}";
 			case ErrorNumbers.InvalidInstructionFormat:
-				errorWritter.WriteLine($"Invalid instruction format ({errorDataString[0]}) " +
-				                  $"encountered on the {errorDataInt[0]}th instruction definition.");
-				break;
+				return $"Invalid instruction format ({errorDataString[0]}) " +
+				       $"encountered on the {errorDataInt[0]}th instruction definition.";
 			case ErrorNumbers.InvalidInstrInAsm:
-				errorWritter.WriteLine($"Invalid instruction {errorDataString[0]} used in assembly file on line {lineNum}");
-				break;
+				return $"Invalid instruction {errorDataString[0]} used in assembly file on line {lineNum}";
 			case ErrorNumbers.InvalidRegisterFormat:
-				errorWritter.WriteLine($"Invalid register format on line {lineNum}");
-				break;
+				return $"Invalid register format on line {lineNum}";
 			case ErrorNumbers.InvalidImmediateFormat:
-				errorWritter.WriteLine($"Immediate value on line {lineNum} is of an invalid format");
-				break;
+				return $"Immediate value on line {lineNum} is of an invalid format";
 			case ErrorNumbers.InvalidImmediateLength:
-				errorWritter.WriteLine($"Immediate on line {lineNum} does not fit within the space provided");
-				break;
+				return $"Immediate on line {lineNum} does not fit within the space provided";
 			case ErrorNumbers.InvalidAddressFormat:
-				errorWritter.WriteLine($"Address value on line {lineNum} is of an invalid format");
-				break;
+				return $"Address value on line {lineNum} is of an invalid format";
 			case ErrorNumbers.InvalidAddressLength:
-				errorWritter.WriteLine($"Address on line {lineNum} does not fit within the space provided");
-				break;
+				return $"Address on line {lineNum} does not fit within the space provided";
 			default:
-				errorWritter.WriteLine(errno.ToString());
-				throw new NotImplementedException();
+				return errno.ToString();
 		}
 	}
 }
@@ -143,7 +116,6 @@ public class ErrorValue {
 
 public enum ErrorNumbers {
 	Okay,
-	InvalidOptions,
 	InvalidJson,
 	NoInstrInJson,
 	InvalidRLength,

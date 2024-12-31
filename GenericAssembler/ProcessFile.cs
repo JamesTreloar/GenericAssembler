@@ -1,7 +1,7 @@
 namespace GenericAssembler;
 
 public class ProcessFile(Configuration configuration) {
-	public (List<string>?, ErrorValue) Run(string[] lines) {
+	public Result<List<string>> Run(string[] lines) {
 		List<PartialInstruction> partialInstructions = new();
 		Dictionary<string, int> labelLocations = new();
 		ErrorValue ev = new(ErrorNumbers.Okay);
@@ -27,7 +27,7 @@ public class ProcessFile(Configuration configuration) {
 			int index = definitions.FindIndex(x => x.Nemonic == splitLine[0]);
 			if (index == -1) {
 				ev = new(ErrorNumbers.InvalidInstrInAsm, lineNum, new string[] { splitLine[0] });
-				return (null, ev);
+				return Result<List<string>>.Err(ev);
 			}
 
 			Instruction instruction = definitions[index];
@@ -151,7 +151,7 @@ public class ProcessFile(Configuration configuration) {
 			}
 
 			if (failed) {
-				return (null, ev);
+				return Result<List<string>>.Err(ev);
 			}
 
 			if (skipped) {
@@ -174,7 +174,7 @@ public class ProcessFile(Configuration configuration) {
 			}
 		}
 
-		return (result, ev);
+		return Result<List<string>>.Ok(result);
 	}
 
 	private bool ValidateImmediate(int val) {
