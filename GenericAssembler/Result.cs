@@ -5,7 +5,7 @@ public readonly struct Result<T> {
 	public T Value { get; }
 	private readonly ErrorValue? _ev;
 	
-	public string getError  => _ev.ToString();
+	public string GetError  => _ev.ToString();
 
 	private Result(T value, ErrorValue? ev, bool isOk) {
 		IsOk = isOk;
@@ -20,5 +20,4 @@ public readonly struct Result<T> {
 	public static Result<T> Err (ErrorValue ev) {
 		return new(default, ev, false);
 	}
-
 }

@@ -113,5 +113,5 @@ public class SettingReaderTest {
 		if (regMap) {
 			Assert.That(expected.RegisterMap, Is.EquivalentTo(actual.RegisterMap));
 		}
-	} 
+	}
 }

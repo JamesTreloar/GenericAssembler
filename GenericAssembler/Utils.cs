@@ -29,5 +29,4 @@ public class Utils {
 		start += num;
 		return Convert.ToString(start, 2).PadLeft(length, '0');
 	}
-	
 }

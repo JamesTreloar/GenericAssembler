@@ -40,7 +40,7 @@ internal abstract class Program {
 
 		Result<Configuration> configuration = settingReader.Read();
 		if (!configuration.IsOk) {
-			Console.WriteLine(configuration.getError);
+			Console.WriteLine(configuration.GetError);
 			return 1;
 		}
 
@@ -53,7 +53,7 @@ internal abstract class Program {
 		ProcessFile processFile = new(configuration.Value);
 		Result<List<string>> procFile = processFile.Run(input);
 		if (!procFile.IsOk) {
-			Console.WriteLine(procFile.getError);
+			Console.WriteLine(procFile.GetError);
 			return 1;
 		}
 
