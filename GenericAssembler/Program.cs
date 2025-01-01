@@ -4,11 +4,10 @@ namespace GenericAssembler;
 
 internal abstract class Program {
 	public class Options {
-		[Option(shortName: 'a', longName: "assembly", Required = false, HelpText = "Path to assembly file")]
-		public string? AssemblyPath { get; init; }
-
 		[Option(shortName: 's', longName: "specification", Required = true, HelpText = "Path to specification file")]
 		public required string SpecificationPath { get; init; }
+		[Option(shortName: 'a', longName: "assembly", Required = false, HelpText = "Path to assembly file")]
+		public string? AssemblyPath { get; init; }
 
 		[Option(shortName: 'o', longName: "output", Required = false, HelpText = "Path to output file")]
 		public string? OutputPath { get; init; }
@@ -39,9 +38,9 @@ internal abstract class Program {
 
 		SettingReader settingReader = new(jsonStringConfig);
 
-		(Configuration? configuration, ev) = settingReader.Read();
-		if (!ev.IsOkay() || configuration == null) {
-			ev.DisplayError();
+		Result<Configuration> configuration = settingReader.Read();
+		if (!configuration.IsOk) {
+			Console.WriteLine(configuration.GetError);
 			return 1;
 		}
 
@@ -51,13 +50,14 @@ internal abstract class Program {
 		}
 
 		string[] input = File.ReadAllLines(options.AssemblyPath);
-		ProcessFile processFile = new(configuration);
-		(List<string>? result, ev) = processFile.Run(input);
-		if (!ev.IsOkay() || result == null) {
-			ev.DisplayError();
+		ProcessFile processFile = new(configuration.Value);
+		Result<List<string>> procFile = processFile.Run(input);
+		if (!procFile.IsOk) {
+			Console.WriteLine(procFile.GetError);
 			return 1;
 		}
 
+		List<string> result = procFile.Value;
 		int format = options.Format;
 		if (options.OutputPath != null) {
 			if ((format & 1) == 1) {

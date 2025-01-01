@@ -5,7 +5,7 @@ namespace GenericAssembler.Tests;
 public class SettingReaderTest {
 	private const string PrePath = "../../../Resources/Configs/";
 	
-	private (Configuration?, ErrorValue) GetConfiguration(string name) {
+	private Result<Configuration> GetConfiguration(string name) {
 		string configInput = File.ReadAllText(PrePath + name);
 		SettingReader settingReader = new(configInput);
 		return settingReader.Read();
@@ -14,12 +14,9 @@ public class SettingReaderTest {
 	
 	[Test]
 	public void ConfigSimple() {
-		(Configuration? configuration, ErrorValue ev) = GetConfiguration("configBasic.json");
-
-        Assert.Multiple(() => {
-            Assert.That(ev.IsOkay);
-            Assert.That(configuration, Is.Not.Null);
-        });
+		Result<Configuration> configuration = GetConfiguration("configBasic.json");
+		Assert.That(configuration.IsOk);
+        
 
         Configuration expectedConfig = new() {
 	        InstructionLength = 16,
@@ -43,17 +40,16 @@ public class SettingReaderTest {
 		};
 		expectedConfig.Instructions = expectedInstructions;
 		
-		AreConfigurationsEqual(expectedConfig, configuration, regMap:false);
+		AreConfigurationsEqual(expectedConfig, configuration.Value, regMap:false);
 	}
 
 	[Test]
 	public void ConfigWithRegMap() {
-		(Configuration? configuration, ErrorValue ev) = GetConfiguration("configRegMap.json");
+		Result<Configuration> configuration = GetConfiguration("configRegMap.json");
 
-		Assert.Multiple(() => {
-			Assert.That(ev.IsOkay);
-			Assert.That(configuration, Is.Not.Null);
-		});
+		
+		Assert.That(configuration.IsOk);
+		
 
 		Configuration expectedConfig = new() {
 			InstructionLength = 16,
@@ -94,7 +90,7 @@ public class SettingReaderTest {
 
 		expectedConfig.RegisterMap = regMap;
 
-		AreConfigurationsEqual(configuration, expectedConfig);
+		AreConfigurationsEqual(configuration.Value, expectedConfig);
 	}
 
 	private static void AreConfigurationsEqual(Configuration expected, Configuration actual, bool lengths = true, bool instructions = true, bool regMap = true) {
@@ -117,5 +113,5 @@ public class SettingReaderTest {
 		if (regMap) {
 			Assert.That(expected.RegisterMap, Is.EquivalentTo(actual.RegisterMap));
 		}
-	} 
+	}
 }
