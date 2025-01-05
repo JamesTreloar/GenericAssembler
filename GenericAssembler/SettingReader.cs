@@ -48,14 +48,14 @@ public class SettingReader(string jsonString) {
 		}
 
 		foreach (JsonNode jsonNode in instructions) {
-			// Validate Nemonic
-			bool success = jsonNode.AsObject().ContainsKey("Nemonic");
+			// Validate Name
+			bool success = jsonNode.AsObject().ContainsKey("Name");
 			if (!success) {
-				ev = new(ErrorNumbers.MissingNemonic, jsonNode.GetElementIndex());
+				ev = new(ErrorNumbers.MissingName, jsonNode.GetElementIndex());
 				return Result<Configuration>.Err(ev);
 			}
 
-			string nemonic = jsonNode!["Nemonic"]!.ToString();
+			string Name = jsonNode!["Name"]!.ToString();
 
 			// Validate Format
 			success = jsonNode.AsObject().ContainsKey("Format");
@@ -127,31 +127,31 @@ public class SettingReader(string jsonString) {
 			Instruction add;
 			switch (format) {
 				case "R":
-					add = new(nemonic, InstructionFormat.R, opcode, shamt, funct);
+					add = new(Name, InstructionFormat.R, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "RShift":
-					add = new(nemonic, InstructionFormat.RShift, opcode, shamt, funct);
+					add = new(Name, InstructionFormat.RShift, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "RSingle":
-					add = new(nemonic, InstructionFormat.RSingle, opcode, shamt, funct);
+					add = new(Name, InstructionFormat.RSingle, opcode, shamt, funct);
 					config.Instructions.Add(add);
 					break;
 				case "I":
-					add = new(nemonic, InstructionFormat.I, opcode);
+					add = new(Name, InstructionFormat.I, opcode);
 					config.Instructions.Add(add);
 					break;
 				case "IMem":
-					add = new(nemonic, InstructionFormat.IMem, opcode);
+					add = new(Name, InstructionFormat.IMem, opcode);
 					config.Instructions.Add(add);
 					break;
 				case "ISingle":
-					add = new(nemonic, InstructionFormat.ISingle, opcode);
+					add = new(Name, InstructionFormat.ISingle, opcode);
 					config.Instructions.Add(add);
 					break;
 				case "J":
-					add = new(nemonic, InstructionFormat.J, opcode);
+					add = new(Name, InstructionFormat.J, opcode);
 					config.Instructions.Add(add);
 					break;
 				default:

@@ -73,8 +73,8 @@ public class ErrorValue {
 				return "Invalid lengths for j-type instructions." +
 				       "Instruction length needs to be equal to length for opcode, and address" +
 				       $"Currently instruction length is {errorDataInt[0]} and calculated length is {errorDataInt[1]}";
-			case ErrorNumbers.MissingNemonic:
-				return $"There is no nemonic field in the {lineNum}th instruction definition";
+			case ErrorNumbers.MissingName:
+				return $"There is no Name field in the {lineNum}th instruction definition";
 			case ErrorNumbers.MissingOpCode:
 				return $"There is no opcode field in the {lineNum}th instruction definition";
 			case ErrorNumbers.BadOpCode:
@@ -121,7 +121,7 @@ public enum ErrorNumbers {
 	InvalidRLength,
 	InvalidILength,
 	InvalidJLength,
-	MissingNemonic,
+	MissingName,
 	MissingFormat,
 	MissingOpCode,
 	BadOpCode,
