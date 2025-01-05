@@ -8,52 +8,52 @@
   "FunctLength": 0,
   "Instructions": [
     {
-      "Nemonic": "add",
+      "Name": "add",
       "Format": "R",
       "OpCode": 1
     },
     {
-      "Nemonic": "sub",
+      "Name": "sub",
       "Format": "R",
       "OpCode": 2
     },
     {
-      "Nemonic": "addi",
+      "Name": "addi",
       "Format": "I",
       "OpCode": 3
     },
     {
-      "Nemonic": "jump",
+      "Name": "jump",
       "Format": "J",
       "OpCode": 4
     },
     {
-      "Nemonic": "b",
+      "Name": "b",
       "Format": "J",
       "OpCode": 4
     },
     {
-      "Nemonic": "lw",
+      "Name": "lw",
       "Format": "IMem",
       "OpCode": 5
     },
     {
-      "Nemonic": "slr",
+      "Name": "slr",
       "Format": "RShift",
       "OpCode": 6
     },
     {
-      "Nemonic": "lui",
+      "Name": "lui",
       "Format":"ISingle",
       "OpCode": 7
     },
     {
-      "Nemonic": "jr",
+      "Name": "jr",
       "Format": "RSingle",
       "OpCode": 8
     },
     {
-      "Nemonic": "beq",
+      "Name": "beq",
       "Format": "I",
       "OpCode": 9
     }
